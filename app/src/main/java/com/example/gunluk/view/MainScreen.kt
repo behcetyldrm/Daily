@@ -27,6 +27,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.MoreVert
@@ -72,6 +74,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.gunluk.R
+import com.example.gunluk.model.DailyModel
 import com.example.gunluk.viewmodel.MainScreenVM
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -84,14 +87,19 @@ import java.util.Locale
 fun MainScreen(viewModel: MainScreenVM = hiltViewModel(), navController: NavController) {
 
     val allData = viewModel.diaries.collectAsState()
-    var showDialog by remember { mutableStateOf(false) }
+
     var dailyText by remember { mutableStateOf("") }
+    var title by remember { mutableStateOf("") }
     var selectedRating by remember { mutableIntStateOf(3) }
+
     var settingMenuShow by remember { mutableStateOf(false) }
+    var showDialog by remember { mutableStateOf(false) }
+    var showDailyMenu by remember { mutableStateOf(false) }
 
     val today = LocalDate.now()
     val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
     val formattedDate = today.format(formatter)
+
 
     Column(modifier = Modifier.fillMaxSize()) {
         Row (
@@ -212,22 +220,39 @@ fun MainScreen(viewModel: MainScreenVM = hiltViewModel(), navController: NavCont
                                     }
                                 )
 
-                                TextButton(
-                                    onClick = {
-                                        showDialog = false
-                                        dailyText = ""
-                                   },
-                                    shape = RoundedCornerShape(8.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        contentColor = Color(0xff5C3A21),
-                                        containerColor = Color.Transparent
-                                    )
+                                Box(
+                                    modifier = Modifier
+                                        .size(22.dp)
+                                        .background(
+                                            color = Color(0xff5C3A21),
+                                            shape = CircleShape
+                                        )
+                                        .clickable { showDailyMenu = !showDailyMenu },
+                                    contentAlignment = Alignment.Center
                                 ) {
-                                    Text("Kaydetme")
+                                    Icon(
+                                        imageVector = Icons.Default.MoreVert,
+                                        contentDescription = "Menu",
+                                        tint = Color.White,
+                                        modifier = Modifier
+                                    )
+
+                                    DailyMenu(
+                                        expanded = showDailyMenu,
+                                        onDismiss = { showDailyMenu = false }
+                                    )
                                 }
+
                                 Spacer(modifier = Modifier.width(3.dp))
                                 TextButton(
-                                    onClick = { /*kaydet*/ },
+                                    onClick = {
+                                        /*val data = DailyModel(title, dailyText, formattedDate, selectedRating, today)
+                                        viewModel.addDaily(data)
+                                        title = ""
+                                        dailyText = ""
+                                        selectedRating = 3
+                                        showDialog = false*/
+                                    },
                                     shape = RoundedCornerShape(8.dp),
                                     colors = ButtonDefaults.buttonColors(
                                         contentColor = Color(0xff5C3A21),
@@ -238,7 +263,21 @@ fun MainScreen(viewModel: MainScreenVM = hiltViewModel(), navController: NavCont
                                 }
                             }
                         }
-
+                        TextField(
+                            value = title,
+                            onValueChange = { title = it },
+                            placeholder = { Text("Başlık") },
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                focusedTextColor = Color(0xFF682E19),
+                                unfocusedTextColor = Color(0xFF682E19),
+                                focusedIndicatorColor = Color(0xff7f5539),
+                                unfocusedIndicatorColor = Color(0xff7f5539)
+                            ),
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true
+                        )
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -420,6 +459,77 @@ fun SettingsMenu(
                     }
                     .padding(vertical = 8.dp)
             )
+        }
+    }
+}
+
+@Composable
+fun DailyMenu(
+    expanded: Boolean,
+    onDismiss: () -> Unit
+) {
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier
+            .background(
+                color = MaterialTheme.colorScheme.surface,
+                shape = RoundedCornerShape(12.dp)
+            )
+            .border(
+                1.dp,
+                MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                RoundedCornerShape(12.dp)
+            )
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        ) {
+
+            Row (
+
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ){
+                Text(
+                    text = "Tarihi Düzenle",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontSize = 18.sp,
+                    modifier = Modifier
+                        .clickable { onDismiss() }
+                        .padding(vertical = 8.dp)
+                )
+                Spacer(Modifier.width(16.dp))
+                Icon(
+                    imageVector = Icons.Filled.DateRange,
+                    contentDescription = "",
+                    tint = Color(0xff5C3A21)
+                )
+            }
+
+            Row (
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ){
+                Text(
+                    text = "Sil",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color(0xFFD32F2F),
+                    fontSize = 18.sp,
+                    modifier = Modifier
+                        .clickable { onDismiss() }
+                        .padding(vertical = 8.dp)
+                )
+                Spacer(Modifier.width(16.dp))
+                Icon(
+                    imageVector = Icons.Filled.Delete,
+                    contentDescription = "",
+                    tint = Color(0xFFD32F2F)
+                )
+            }
+
         }
     }
 }
